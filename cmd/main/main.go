@@ -1,12 +1,24 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	"os"
 
-	"github.com/tylerkeyes/chatroom/pkg/utils"
+	"github.com/tylerkeyes/chatroom/pkg/routes"
 )
 
 func main() {
-    fmt.Println("hello from main.go")
-    utils.Utils()
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", routes.GetRoot)
+    mux.HandleFunc("/hello", routes.GetHello)
+    
+    err := http.ListenAndServe(":3333", mux)
+    if errors.Is(err, http.ErrServerClosed) {
+        fmt.Println("server closed")
+    } else if err != nil {
+        fmt.Printf("error starting server: %s\n", err)
+        os.Exit(1)
+    }
 }

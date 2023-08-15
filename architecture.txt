@@ -1,0 +1,5 @@
+Client connects to chat app, can create rooms or enter room
+
+Server stores log of all messages, updates connected clients when a new message is sent
+
+Look into using Snowflake ID as message ID
