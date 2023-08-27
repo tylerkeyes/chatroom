@@ -1,4 +1,4 @@
-package routes
+package main
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type message struct {
@@ -16,24 +18,37 @@ type message struct {
 	user string
 }
 
-func GetRoot(w http.ResponseWriter, r *http.Request) {
-	hasFirst := r.URL.Query().Has("first")
-	first := r.URL.Query().Get("first")
-	hasSecond := r.URL.Query().Has("second")
-	second := r.URL.Query().Get("second")
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Printf("counld not read request body: %s\n", err)
-	}
-
-	fmt.Printf("got / request, first(%t)=%s, second(%t)=%s, body:\n%s\n",
-		hasFirst, first, hasSecond, second, body)
-	http.ServeFile(w, r, "./templates/index.html")
-	io.WriteString(w, "Welcome to chatbot\n")
+func (s *Server) routes() {
+	s.router.Use(ChangeMethod)
+	s.router.Get("/", s.GetRoot())
+	s.router.Post("/", CreateRoom)
+	s.router.Route("/room/{roomId}", func(r chi.Router) {
+		r.Get("/", GetRoomMessages)
+		r.Post("/", SendRoomMessage)
+	})
 }
 
-func GetHello(w http.ResponseWriter, r *http.Request) {
+func (s *Server) GetRoot() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		hasFirst := r.URL.Query().Has("first")
+		first := r.URL.Query().Get("first")
+		hasSecond := r.URL.Query().Has("second")
+		second := r.URL.Query().Get("second")
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			fmt.Printf("counld not read request body: %s\n", err)
+		}
+
+		fmt.Printf("got / request, first(%t)=%s, second(%t)=%s, body:\n%s\n",
+			hasFirst, first, hasSecond, second, body)
+		http.ServeFile(w, r, "./templates/index.html")
+		io.WriteString(w, "Welcome to chatbot\n")
+	}
+}
+
+func (s *Server) GetHello() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("got /hello request\n")
 
 	myName := r.PostFormValue("myName")
@@ -44,9 +59,10 @@ func GetHello(w http.ResponseWriter, r *http.Request) {
 	}
 
 	io.WriteString(w, fmt.Sprintf("Hello, %s!\n", myName))
+	}
 }
 
-func CreateRoom(w http.ResponseWriter, r *http.Request) {
+func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) http.HandlerFunc {
 	fmt.Printf("got create room request\n")
 
 	roomName := r.FormValue("roomName")
