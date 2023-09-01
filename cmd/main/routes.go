@@ -12,13 +12,13 @@ import (
 )
 
 type message struct {
-	id   uint64
-	chat string
-	room string
-	user string
+	Id   uint64
+	Chat string
+	Room string
+	User string
 }
 
-func (s *Server) routes() {
+func (s *Server) Routes() {
 	fmt.Println("Initialize routes")
 	s.router.Use(ChangeMethod)
 	s.router.Get("/", s.GetRoot())
@@ -41,13 +41,40 @@ func (s *Server) GetRoot() http.HandlerFunc {
 		fmt.Println("Read body")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			fmt.Printf("counld not read request body: %s\n", err)
+			fmt.Printf("could not read request body: %s\n", err)
 		}
 
 		fmt.Printf("got / request, first(%t)=%s, second(%t)=%s, body:\n%s\n",
 			hasFirst, first, hasSecond, second, body)
-		http.ServeFile(w, r, "./templates/index.html")
-		io.WriteString(w, "Welcome to chatbot\n")
+
+		messages := []message{
+			{
+				Id:   1,
+				Chat: "first chat",
+				Room: "coolRoom",
+				User: "dick",
+			},
+		}
+
+		rooms := s.OpenRooms()
+		for _, room := range rooms {
+			messages = append(messages, message{
+				Id:   0,
+				Chat: "",
+				Room: room,
+				User: "",
+			})
+		}
+
+		t, _ := template.ParseFiles("./templates/index.html")
+		err = t.Execute(w, messages)
+		if err != nil {
+			fmt.Printf("could not execute index template: %s\n", err)
+		}
+
+		//fmt.Println("Serve file")
+		//http.ServeFile(w, r, "./templates/index.html")
+		//io.WriteString(w, "Welcome to chatbot\n")
 	}
 }
 
@@ -90,7 +117,7 @@ func (s *Server) GetRoomMessages() http.HandlerFunc {
 
 		// TOTO: get chat history data from database for given room, read into messages slice
 		messages := make([]message, 0)
-		messages = append(messages, message{id: 1, chat: "hello", room: "myroom", user: "tkeyes"})
+		messages = append(messages, message{Id: 1, Chat: "hello", Room: "myroom", User: "tkeyes"})
 
 		tmpl, _ := template.ParseFiles("templates/test.html") //New("itemlist").
 

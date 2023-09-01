@@ -14,6 +14,11 @@ import (
 // globals
 var router *chi.Mux
 
+type Server struct {
+	router *chi.Mux
+	db     *gocql.Session
+}
+
 // TODO: create global variable for db access
 
 func main() {
@@ -48,7 +53,7 @@ func initServer() *Server {
 	}
 
 	// init server routes
-	s.routes()
+	s.Routes()
 
 	return &s
 }

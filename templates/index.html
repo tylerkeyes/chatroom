@@ -62,12 +62,12 @@
         </form>
     </section>
     <section class="container">
-        <h2>Our Services</h2>
+        <h2>Available Rooms</h2>
         <ul>
         {{if eq (len .) 0}}
         {{end}}
-        {{range .messages}}
-            <li>{{.messages.user}} - ${{.messages.chat}}</li>
+        {{range .}}
+            <li>{{.Room}}</li>
         {{end}}
         </ul>
     </section>
