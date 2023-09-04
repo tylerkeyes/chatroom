@@ -1,19 +1,27 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gocql/gocql"
 )
 
+// path to config file
+var configPath = "./config/config.env"
+
+// configuration variables
+var cassandraClusterIp = "127.0.0.1:9042"
+
 // globals
 var router *chi.Mux
-var cassandraClusterIp = "127.0.0.1:9042"
 
 type Server struct {
 	router *chi.Mux
@@ -23,6 +31,8 @@ type Server struct {
 // TODO: create global variable for db access
 
 func main() {
+	loadConfig()
+
 	server := initServer()
 	fmt.Println("Created server")
 	defer server.db.Close()
@@ -36,6 +46,31 @@ func main() {
 		fmt.Printf("error starting server: %s\n", err)
 		os.Exit(1)
 	}
+}
+
+func loadConfig() {
+	var configs = make(map[string]string)
+	
+	file, err := os.Open(configPath)
+	if err != nil {
+		log.Printf("error opening config file: %s\n", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		text := strings.Split(scanner.Text(), "=")
+		configs[text[0]] = text[1]
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("error scanning config file: %s\n", err)
+	}
+
+	// TODO: read config options into variables
+	fmt.Printf("cluster ip: %v\n", cassandraClusterIp)
+	cassandraClusterIp = configs["cassandra_ip"]
+	fmt.Printf("cluster ip: %v\n", cassandraClusterIp)
 }
 
 func initServer() *Server {
