@@ -13,6 +13,7 @@ import (
 
 // globals
 var router *chi.Mux
+var cassandraClusterIp = "127.0.0.1:9042"
 
 type Server struct {
 	router *chi.Mux
@@ -60,7 +61,8 @@ func initServer() *Server {
 
 func initDbConnection() *gocql.Session {
 	// need to find a way to know the IP address of the machine running cassandra
-	cluster := gocql.NewCluster("127.0.0.1")
+	cluster := gocql.NewCluster(cassandraClusterIp)
+	fmt.Println("Creating cluster")
 	cluster.Keyspace = "chatbot"
 	cluster.Consistency = gocql.Quorum
 	cluster.ProtoVersion = 4
