@@ -18,11 +18,9 @@ import (
 var configPath = "./config/config.env"
 
 // configuration variables
-var cassandraClusterIp = "127.0.0.1:9042"
+var cassandraClusterIp string
 
 // globals
-var router *chi.Mux
-
 type Server struct {
 	router *chi.Mux
 	db     *gocql.Session
@@ -68,9 +66,7 @@ func loadConfig() {
 	}
 
 	// TODO: read config options into variables
-	fmt.Printf("cluster ip: %v\n", cassandraClusterIp)
 	cassandraClusterIp = configs["cassandra_ip"]
-	fmt.Printf("cluster ip: %v\n", cassandraClusterIp)
 }
 
 func initServer() *Server {
